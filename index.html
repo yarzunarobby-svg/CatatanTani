@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#285b91">
+<meta name="description" content="Aplikasi pencatatan usaha tani padi dan jagung.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CatatanPetani">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<title>CatatanPetani | Pencatatan Pertanian</title>
+<style>
+:root{
+  --green:#326da8;--green2:#5b9bd5;--mint:#eaf3fc;--bg:#f4f7fb;--ink:#1e2b3a;
+  --muted:#718096;--line:#e1e9f2;--white:#fff;--orange:#d97706;--red:#c2413b;
+  --shadow:0 8px 28px rgba(37,76,119,.08);--radius:16px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
+.sidebar{background:#173b63;color:#eef5fc;padding:24px 16px;display:flex;flex-direction:column;gap:24px}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 8px}
+.brand-mark{width:40px;height:40px;border-radius:13px;background:#e0efff;color:#285b91;display:grid;place-items:center;font-size:22px}
+.brand strong{font-size:18px;letter-spacing:.2px}.brand small{display:block;color:#bfd5eb;font-size:11px;margin-top:1px}
+.nav-label{font-size:10px;letter-spacing:1.4px;color:#a9c4df;padding:0 12px;margin:4px 0 7px;text-transform:uppercase}
+.nav{display:flex;flex-direction:column;gap:5px}
+.nav button{border:0;background:transparent;color:#dceaf8;text-align:left;padding:11px 12px;border-radius:10px;display:flex;align-items:center;gap:12px;font-weight:550}
+.nav button:hover,.nav button.active{background:#28558a;color:#fff}
+.nav .ico{width:20px;text-align:center;font-size:16px}
+.side-note{margin-top:auto;border:1px solid #456b94;border-radius:13px;padding:13px;color:#d8e8f8;font-size:12px}
+.side-note b{display:block;color:#fff;margin-bottom:5px}
+.main{min-width:0;padding:26px 30px 40px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:25px}
+.eyebrow{font-size:11px;color:var(--green2);font-weight:750;text-transform:uppercase;letter-spacing:1.2px}
+h1{font-size:25px;margin:3px 0 0;letter-spacing:-.5px}
+.top-actions{display:flex;gap:9px;align-items:center}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 13px;border-radius:10px;font-weight:650;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:#9dbfe0;background:#f9fbfe}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+.btn.primary:hover{background:#24558a}
+.btn.danger{color:var(--red);border-color:#f0cecb}
+.btn.small{padding:6px 9px;font-size:12px;border-radius:8px}
+.mobile-menu{display:none}
+.grid{display:grid;gap:15px}
+.stats{grid-template-columns:repeat(4,minmax(0,1fr));margin-bottom:17px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:17px;box-shadow:0 3px 14px rgba(30,60,40,.025)}
+.stat-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;font-weight:600}
+.stat-icon{width:32px;height:32px;border-radius:10px;background:var(--mint);display:grid;place-items:center;font-size:16px}
+.stat-value{font-size:25px;font-weight:800;letter-spacing:-.7px;margin:10px 0 2px}
+.stat-sub{color:var(--muted);font-size:11px}
+.two-col{grid-template-columns:1.15fr .85fr}
+.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 3px 14px rgba(30,60,40,.025);min-width:0}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:15px}
+.panel h2{font-size:15px;margin:0}
+.muted{color:var(--muted)}
+.small-text{font-size:12px}
+.crop-bars{display:flex;flex-direction:column;gap:17px;padding:5px 0}
+.crop-row{display:grid;grid-template-columns:72px 1fr 75px;gap:10px;align-items:center;font-size:12px}
+.track{height:10px;border-radius:20px;background:#edf3f9;overflow:hidden}
+.fill{height:100%;border-radius:20px;background:var(--green2);min-width:0}
+.fill.maize{background:#d8a52c}
+.activity-list{display:flex;flex-direction:column;gap:12px}
+.activity-item{display:flex;gap:11px;align-items:flex-start}
+.activity-dot{width:9px;height:9px;border-radius:50%;background:#6fa8df;margin:6px 2px 0;flex:none}
+.activity-item b{font-size:12px;display:block}
+.activity-item small{font-size:11px;color:var(--muted)}
+.section-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.search{min-width:210px;flex:1;max-width:340px}
+input,select,textarea{width:100%;border:1px solid #dce5de;background:#fff;border-radius:9px;padding:10px 11px;color:var(--ink);outline:none}
+input:focus,select:focus,textarea:focus{border-color:#75a9d8;box-shadow:0 0 0 3px rgba(72,135,198,.12)}
+textarea{min-height:78px;resize:vertical}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:700px}
+th,td{padding:11px 12px;border-bottom:1px solid #edf1ee;text-align:left;vertical-align:middle}
+th{background:#f7f9fc;color:#6c7a71;font-size:10px;letter-spacing:.7px;text-transform:uppercase;white-space:nowrap}
+td{font-size:12px}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:#f9fbfe}
+.actions{display:flex;gap:6px;white-space:nowrap}
+.pill{display:inline-flex;padding:4px 8px;border-radius:30px;font-size:10px;font-weight:750;background:#eaf3fc;color:#285b91}
+.pill.yellow{background:#fff5dd;color:#94620b}
+.pill.red{background:#fdecea;color:#a43b34}
+.empty{padding:34px 15px;text-align:center;color:var(--muted)}
+.empty strong{display:block;color:var(--ink);margin-bottom:4px}
+.report-cards{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:15px}
+.report-note{padding:12px 14px;background:#eff6fd;border-radius:10px;color:#42698f;font-size:12px;margin-top:13px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(14,30,20,.48);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
+.modal-backdrop.show{display:flex}
+.modal{width:min(680px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 25px 80px rgba(0,0,0,.2)}
+.modal-head{padding:18px 21px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-head h2{font-size:17px;margin:0}
+.close{border:0;background:#f0f4f1;border-radius:8px;width:32px;height:32px;font-size:18px}
+.modal-body{padding:20px 21px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field.full{grid-column:1/-1}
+.field label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+.field .hint{font-size:10px;color:var(--muted);margin-top:4px}
+.modal-foot{padding:15px 21px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:9px}
+.notice{padding:13px 15px;border-radius:11px;background:#fff8e8;color:#795619;font-size:12px;margin-bottom:15px;border:1px solid #f3e3bd}
+.settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.setting-card{border:1px solid var(--line);border-radius:13px;padding:17px}
+.setting-card h3{font-size:14px;margin:0 0 6px}
+.setting-card p{font-size:12px;color:var(--muted);margin:0 0 13px}
+.toast{position:fixed;bottom:20px;right:20px;background:#173b63;color:#fff;padding:12px 16px;border-radius:10px;box-shadow:var(--shadow);z-index:20;display:none;font-size:13px}
+.toast.show{display:block}
+@media(max-width:1050px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.two-col{grid-template-columns:1fr}}
+@media(max-width:760px){
+ .app{grid-template-columns:1fr}.sidebar{display:none;position:fixed;z-index:9;inset:0 auto 0 0;width:260px;box-shadow:10px 0 40px rgba(0,0,0,.18)}.sidebar.open{display:flex}
+ .main{padding:18px 14px 30px}.topbar{align-items:flex-start}.mobile-menu{display:inline-flex}
+ h1{font-size:21px}.top-actions .btn:not(.primary){display:none}
+ .stats{gap:10px}.stat{padding:13px}.stat-value{font-size:21px}
+ .report-cards,.settings-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+ .top-actions{gap:6px}.top-actions .btn{padding:8px 10px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">🌾</div>
+      <div><strong>CatatanPetani</strong><small>Manajemen Usaha Tani</small></div>
+    </div>
+    <div>
+      <div class="nav-label">Menu utama</div>
+      <nav class="nav" id="nav">
+        <button data-page="dashboard" class="active"><span class="ico">▦</span>Dashboard</button>
+        <button data-page="lands"><span class="ico">▤</span>Data Lahan</button>
+        <button data-page="seasons"><span class="ico">🌱</span>Musim Tanam</button>
+        <button data-page="activities"><span class="ico">☑</span>Aktivitas Budidaya</button>
+        <button data-page="expenses"><span class="ico">💸</span>Biaya Produksi</button>
+        <button data-page="stocks"><span class="ico">📦</span>Persediaan</button>
+        <button data-page="harvests"><span class="ico">🌾</span>Hasil Panen</button>
+        <button data-page="sales"><span class="ico">🧾</span>Penjualan</button>
+        <button data-page="reports"><span class="ico">▥</span>Laporan</button>
+      </nav>
+    </div>
+    <div>
+      <div class="nav-label">Pengaturan</div>
+      <nav class="nav">
+        <button data-page="backup"><span class="ico">⚙</span>Cadangan Data</button>
+      </nav>
+    </div>
+    <div class="side-note"><b>Catatan penyimpanan</b>Data tersimpan di browser perangkat ini. Lakukan ekspor cadangan secara berkala agar catatan tidak hilang.</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <button class="btn mobile-menu" id="menuBtn" aria-label="Buka menu">☰</button>
+        <div><div class="eyebrow">Sistem pencatatan pertanian</div><h1 id="pageTitle">Dashboard</h1></div>
+      </div>
+      <div class="top-actions">
+        <button class="btn" id="exportBtn">⇩ Ekspor CSV</button>
+        <button class="btn primary" id="addBtn">＋ Tambah Data</button>
+      </div>
+    </header>
+    <section id="content"></section>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-head"><h2 id="modalTitle">Tambah Data</h2><button class="close" id="closeModal">×</button></div>
+    <form id="recordForm">
+      <div class="modal-body"><div class="form-grid" id="formFields"></div></div>
+      <div class="modal-foot"><button type="button" class="btn" id="cancelModal">Batal</button><button type="submit" class="btn primary">Simpan Data</button></div>
+    </form>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY = "catatanpetani_data_v1";
+const emptyState = {lands:[],seasons:[],activities:[],expenses:[],stocks:[],stockMoves:[],harvests:[],sales:[]};
+let db = loadData();
+let currentPage = "dashboard";
+let editingId = null;
+let activeSearch = "";
+
+function loadData(){
+  try { return {...emptyState,...JSON.parse(localStorage.getItem(STORE_KEY) || "{}")}; }
+  catch(e){ return {...emptyState}; }
+}
+function saveData(){ localStorage.setItem(STORE_KEY,JSON.stringify(db)); }
+function id(){ return "r"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function money(n){ return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0); }
+function number(n,d=2){ return new Intl.NumberFormat("id-ID",{maximumFractionDigits:d}).format(Number(n)||0); }
+function dateFmt(v){ if(!v)return "—"; const d=new Date(v+"T00:00:00"); return isNaN(d)?"—":d.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}); }
+function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2400);}
+function sum(arr,fn){return arr.reduce((a,x)=>a+(Number(fn(x))||0),0);}
+function kg(q,u){q=Number(q)||0;return u==="ton"?q*1000:q;}
+function landName(landId){return db.lands.find(x=>x.id===landId)?.name||"Lahan dihapus";}
+function seasonName(seasonId){const s=db.seasons.find(x=>x.id===seasonId);return s?`${s.crop==="padi"?"Padi":"Jagung"} · ${s.variety||"Tanpa varietas"}`:"—";}
+function seasonLand(s){return landName(s.landId);}
+function costOfSeason(sid){return sum(db.expenses.filter(x=>x.seasonId===sid),x=>Number(x.quantity)*Number(x.unitPrice));}
+function revenueOfSeason(sid){return sum(db.sales.filter(x=>x.seasonId===sid),x=>Number(x.quantity)*Number(x.unitPrice));}
+function harvestOfSeason(sid){return sum(db.harvests.filter(x=>x.seasonId===sid),x=>kg(x.quantity,x.unit));}
+function totalCost(){return sum(db.expenses,x=>Number(x.quantity)*Number(x.unitPrice));}
+function totalRevenue(){return sum(db.sales,x=>Number(x.quantity)*Number(x.unitPrice));}
+function totalHarvest(){return sum(db.harvests,x=>kg(x.quantity,x.unit));}
+function pageTitle(page){
+ const names={dashboard:"Dashboard",lands:"Data Lahan",seasons:"Musim Tanam",activities:"Aktivitas Budidaya",expenses:"Biaya Produksi",stocks:"Persediaan",harvests:"Hasil Panen",sales:"Penjualan",reports:"Laporan Usaha Tani",backup:"Cadangan Data"};
+ return names[page]||"CatatanPetani";
+}
+const configs={
+ lands:{title:"Data Lahan",singular:"Lahan",fields:[
+  {name:"name",label:"Nama lahan",required:true,placeholder:"Contoh: Sawah Blok Utara"},
+  {name:"location",label:"Lokasi lahan",required:true,placeholder:"Desa, kecamatan, kabupaten"},
+  {name:"area",label:"Luas lahan",type:"number",required:true,step:"0.01",placeholder:"Contoh: 0,5"},
+  {name:"ownership",label:"Status kepemilikan",type:"select",options:["Milik sendiri","Sewa","Bagi hasil","Lainnya"]},
+  {name:"soil",label:"Jenis/kondisi tanah",placeholder:"Contoh: aluvial, lempung"},
+  {name:"irrigation",label:"Sumber pengairan",type:"select",options:["Irigasi teknis","Irigasi setengah teknis","Tadah hujan","Pompa","Lainnya"]},
+  {name:"notes",label:"Catatan",type:"textarea",full:true}
+ ],columns:[["name","Nama lahan"],["location","Lokasi"],["area","Luas (ha)"],["ownership","Kepemilikan"],["irrigation","Pengairan"]]},
+ seasons:{title:"Musim Tanam",singular:"Musim tanam",fields:[
+  {name:"landId",label:"Lahan",type:"select",source:"lands",required:true},
+  {name:"crop",label:"Komoditas",type:"select",options:[{value:"padi",label:"Padi"},{value:"jagung",label:"Jagung"}],required:true},
+  {name:"variety",label:"Varietas",required:true,placeholder:"Contoh: Inpari 32 / Bisi 18"},
+  {name:"startDate",label:"Tanggal tanam",type:"date",required:true},
+  {name:"plantingMethod",label:"Metode tanam",type:"select",options:["Tanam pindah","Tabela / tanam benih langsung","Tugal","Transplanter","Lainnya"]},
+  {name:"seedQty",label:"Jumlah benih",type:"number",step:"0.01",placeholder:"0"},
+  {name:"seedUnit",label:"Satuan benih",type:"select",options:["kg","gram","karung","paket"]},
+  {name:"targetYield",label:"Target hasil panen (kg)",type:"number",step:"0.1",placeholder:"0"},
+  {name:"status",label:"Status musim tanam",type:"select",options:[{value:"aktif",label:"Aktif"},{value:"selesai",label:"Selesai"},{value:"gagal",label:"Gagal panen"}]},
+  {name:"notes",label:"Catatan",type:"textarea",full:true}
+ ],columns:[["crop","Komoditas"],["variety","Varietas"],["landId","Lahan"],["startDate","Tanggal tanam"],["status","Status"]]},
+ activities:{title:"Aktivitas Budidaya",singular:"Aktivitas",fields:[
+  {name:"date",label:"Tanggal kegiatan",type:"date",required:true},
+  {name:"seasonId",label:"Musim tanam",type:"select",source:"seasons",required:true},
+  {name:"stage",label:"Tahap budidaya",type:"select",options:["Persiapan lahan","Pengolahan tanah","Persemaian (padi)","Pengolahan benih","Penanaman/tanam pindah (padi)","Penanaman dengan tugal (jagung)","Penyulaman","Pemupukan dasar","Pemupukan susulan I","Pemupukan susulan II","Pengairan/pengaturan air (padi)","Penyiangan/pengendalian gulma","Pembumbunan (jagung)","Pengendalian hama dan penyakit","Perawatan tanaman","Menjelang panen","Panen","Pengeringan hasil","Perontokan/pemipilan","Penggilingan/pascapanen","Lainnya"],required:true},
+  {name:"title",label:"Nama kegiatan",required:true,placeholder:"Contoh: Pemupukan pertama"},
+  {name:"details",label:"Rincian kegiatan",type:"textarea",full:true,placeholder:"Dosis, cara aplikasi, kondisi tanaman, dan hasil pengamatan"},
+  {name:"laborCount",label:"Jumlah tenaga kerja (orang)",type:"number",step:"1",placeholder:"0"},
+  {name:"duration",label:"Durasi (jam)",type:"number",step:"0.5",placeholder:"0"},
+  {name:"notes",label:"Catatan tambahan",type:"textarea",full:true}
+ ],columns:[["date","Tanggal"],["seasonId","Musim tanam"],["stage","Tahap"],["title","Kegiatan"],["laborCount","Tenaga kerja"]]},
+ expenses:{title:"Biaya Produksi",singular:"Biaya",fields:[
+  {name:"date",label:"Tanggal pengeluaran",type:"date",required:true},
+  {name:"seasonId",label:"Musim tanam",type:"select",source:"seasons"},
+  {name:"category",label:"Kategori biaya",type:"select",options:["Benih/bibit","Pupuk organik","Pupuk anorganik","Pestisida/herbisida","Tenaga kerja","Sewa lahan","Sewa alat/mesin","Pengolahan tanah","Pengairan/BBM/listrik","Transportasi","Panen dan pascapanen","Kemasan","Lainnya"],required:true},
+  {name:"description",label:"Uraian biaya",required:true,placeholder:"Contoh: Urea 2 karung"},
+  {name:"quantity",label:"Jumlah",type:"number",step:"0.01",required:true,placeholder:"0"},
+  {name:"unit",label:"Satuan",type:"select",options:["kg","liter","karung","paket","HOK","hari","jam","unit","ha","lainnya"]},
+  {name:"unitPrice",label:"Harga satuan (Rp)",type:"number",step:"1",required:true,placeholder:"0"},
+  {name:"paidBy",label:"Dibayar kepada",placeholder:"Nama toko/pekerja"},
+  {name:"notes",label:"Catatan",type:"textarea",full:true}
+ ],columns:[["date","Tanggal"],["seasonId","Musim tanam"],["category","Kategori"],["description","Uraian"],["quantity","Jumlah"],["amount","Total biaya"]]},
+ stocks:{title:"Persediaan",singular:"Barang persediaan",fields:[
+  {name:"name",label:"Nama barang",required:true,placeholder:"Contoh: Urea"},
+  {name:"category",label:"Kategori",type:"select",options:["Benih","Pupuk","Pestisida","Herbisida","Peralatan","Bahan bakar","Lainnya"]},
+  {name:"quantity",label:"Stok awal/saat ini",type:"number",step:"0.01",required:true,placeholder:"0"},
+  {name:"unit",label:"Satuan",type:"select",options:["kg","liter","karung","botol","paket","unit","buah"]},
+  {name:"minStock",label:"Batas minimum stok",type:"number",step:"0.01",placeholder:"0"},
+  {name:"unitPrice",label:"Harga per satuan (Rp)",type:"number",step:"1",placeholder:"0"},
+  {name:"supplier",label:"Pemasok/toko",placeholder:"Nama pemasok"},
+  {name:"notes",label:"Catatan",type:"textarea",full:true}
+ ],columns:[["name","Nama barang"],["category","Kategori"],["quantity","Stok"],["unit","Satuan"],["minStock","Minimum"],["stockStatus","Keterangan"]]},
+ harvests:{title:"Hasil Panen",singular:"Data panen",fields:[
+  {name:"date",label:"Tanggal panen",type:"date",required:true},
+  {name:"seasonId",label:"Musim tanam",type:"select",source:"seasons",required:true},
+  {name:"quantity",label:"Jumlah hasil panen",type:"number",step:"0.01",required:true,placeholder:"0"},
+  {name:"unit",label:"Satuan hasil",type:"select",options:["kg","ton"],required:true},
+  {name:"quality",label:"Kualitas hasil",type:"select",options:["Premium","Baik","Sedang","Rendah","Belum dinilai"]},
+  {name:"moisture",label:"Kadar air (%)",type:"number",step:"0.1",placeholder:"Opsional"},
+  {name:"notes",label:"Catatan panen",type:"textarea",full:true,placeholder:"Contoh: hasil ubinan, kondisi gabah/pipilan, susut, dan hasil sortasi"}
+ ],columns:[["date","Tanggal"],["seasonId","Musim tanam"],["quantity","Jumlah"],["unit","Satuan"],["quality","Kualitas"],["moisture","Kadar air (%)"]]},
+ sales:{title:"Penjualan",singular:"Penjualan",fields:[
+  {name:"date",label:"Tanggal penjualan",type:"date",required:true},
+  {name:"seasonId",label:"Musim tanam",type:"select",source:"seasons",required:true},
+  {name:"buyer",label:"Nama pembeli",required:true,placeholder:"Nama pembeli/pengepul"},
+  {name:"quantity",label:"Jumlah terjual",type:"number",step:"0.01",required:true,placeholder:"0"},
+  {name:"unit",label:"Satuan",type:"select",options:["kg","ton"],required:true},
+  {name:"unitPrice",label:"Harga jual per satuan (Rp)",type:"number",step:"1",required:true,placeholder:"0"},
+  {name:"paidAmount",label:"Jumlah dibayar (Rp)",type:"number",step:"1",placeholder:"0"},
+  {name:"paymentMethod",label:"Metode pembayaran",type:"select",options:["Tunai","Transfer","Tempo/Belum lunas","Lainnya"]},
+  {name:"notes",label:"Catatan",type:"textarea",full:true}
+ ],columns:[["date","Tanggal"],["seasonId","Musim tanam"],["buyer","Pembeli"],["quantity","Jumlah"],["unitPrice","Harga/satuan"],["amount","Nilai penjualan"],["receivable","Sisa piutang"]]}
+};
+const icons={dashboard:"▦",lands:"▤",seasons:"🌱",activities:"☑",expenses:"💸",stocks:"📦",harvests:"🌾",sales:"🧾",reports:"▥",backup:"⚙"};
+
+function setPage(page){
+ currentPage=page;activeSearch="";
+ document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));
+ document.getElementById("pageTitle").textContent=pageTitle(page);
+ document.getElementById("sidebar").classList.remove("open");
+ const add=document.getElementById("addBtn");
+ add.style.display=configs[page]?"inline-flex":"none";
+ document.getElementById("exportBtn").style.display=(configs[page]||page==="reports")?"inline-flex":"none";
+ render();
+}
+function render(){
+ const c=document.getElementById("content");
+ if(currentPage==="dashboard") c.innerHTML=renderDashboard();
+ else if(configs[currentPage]) c.innerHTML=renderTablePage(currentPage);
+ else if(currentPage==="reports") c.innerHTML=renderReports();
+ else if(currentPage==="backup") c.innerHTML=renderBackup();
+}
+function statCard(label,value,sub,ico){
+ return `<div class="stat"><div class="stat-top"><span>${label}</span><span class="stat-icon">${ico}</span></div><div class="stat-value">${value}</div><div class="stat-sub">${sub}</div></div>`;
+}
+function renderDashboard(){
+ const active=db.seasons.filter(s=>s.status==="aktif").length;
+ const profit=totalRevenue()-totalCost();
+ const crops=["padi","jagung"].map(c=>({crop:c,val:sum(db.harvests.filter(h=>db.seasons.find(s=>s.id===h.seasonId)?.crop===c),h=>kg(h.quantity,h.unit))}));
+ const max=Math.max(1,...crops.map(x=>x.val));
+ const recent=[...db.activities].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,5);
+ const low=db.stocks.filter(s=>Number(s.quantity)<=Number(s.minStock)&&Number(s.minStock)>0);
+ return `
+ <div class="grid stats">
+  ${statCard("Total luas lahan",`${number(sum(db.lands,x=>x.area),2)} ha`,`${db.lands.length} bidang lahan`,"▤")}
+  ${statCard("Musim tanam aktif",active,`${db.seasons.length} musim tercatat`,"🌱")}
+  ${statCard("Total biaya produksi",money(totalCost()),"Akumulasi seluruh musim tanam","💸")}
+  ${statCard("Total hasil panen",`${number(totalHarvest()/1000,2)} ton`,"Padi dan jagung","🌾")}
+  ${statCard("Total penjualan",money(totalRevenue()),"Berdasarkan catatan transaksi","🧾")}
+  ${statCard("Keuntungan sementara",money(profit),profit>=0?"Penjualan dikurangi biaya tercatat":"Biaya tercatat melebihi penjualan","📈")}
+  ${statCard("Persediaan menipis",low.length,"Barang mencapai batas minimum","📦")}
+  ${statCard("Data kegiatan",db.activities.length,"Aktivitas budidaya tercatat","☑")}
+ </div>
+ <div class="grid two-col">
+  <div class="panel">
+   <div class="panel-head"><div><h2>Produksi berdasarkan komoditas</h2><div class="muted small-text">Total hasil panen yang telah dicatat</div></div></div>
+   <div class="crop-bars">
+    ${crops.map(x=>`<div class="crop-row"><b>${x.crop==="padi"?"Padi":"Jagung"}</b><div class="track"><div class="fill ${x.crop==="jagung"?"maize":""}" style="width:${(x.val/max*100).toFixed(1)}%"></div></div><strong style="text-align:right">${number(x.val/1000,2)} ton</strong></div>`).join("")}
+   </div>
+   <div class="report-note">Produktivitas per hektare dihitung pada menu Laporan berdasarkan luas lahan yang terhubung dengan musim tanam.</div>
+  </div>
+  <div class="panel">
+   <div class="panel-head"><div><h2>Aktivitas terbaru</h2><div class="muted small-text">Lima kegiatan terakhir</div></div><button class="btn small" onclick="setPage('activities')">Lihat semua</button></div>
+   ${recent.length?`<div class="activity-list">${recent.map(a=>`<div class="activity-item"><span class="activity-dot"></span><div><b>${esc(a.title||a.stage)}</b><small>${dateFmt(a.date)} · ${esc(seasonName(a.seasonId))}</small></div></div>`).join("")}</div>`:`<div class="empty"><strong>Belum ada aktivitas</strong>Catat kegiatan budidaya pertama Anda.</div>`}
+  </div>
+ </div>
+ ${low.length?`<div class="panel" style="margin-top:15px"><div class="panel-head"><h2>⚠ Persediaan perlu diperhatikan</h2><button class="btn small" onclick="setPage('stocks')">Buka persediaan</button></div><div class="small-text">${low.map(s=>`<span class="pill yellow" style="margin:3px">${esc(s.name)}: ${number(s.quantity)} ${esc(s.unit)}</span>`).join("")}</div></div>`:""}
+ <div class="report-note" style="margin-top:15px">Catatan: angka keuntungan merupakan estimasi berdasarkan transaksi penjualan dan biaya yang sudah dimasukkan. Pastikan seluruh biaya, hasil panen, dan penjualan dicatat agar laporan akurat.</div>`;
+}
+function displayCell(key,x){
+ if(key==="landId")return esc(landName(x.landId));
+ if(key==="seasonId")return esc(seasonName(x.seasonId));
+ if(["date","startDate"].includes(key))return dateFmt(x[key]);
+ if(key==="crop")return x.crop==="padi"?'<span class="pill">Padi</span>':'<span class="pill yellow">Jagung</span>';
+ if(key==="area")return `${number(x.area,2)} ha`;
+ if(key==="amount")return `<b>${money(Number(x.quantity)*Number(x.unitPrice))}</b>`;
+ if(key==="receivable")return `<span class="${(Number(x.quantity)*Number(x.unitPrice)-Number(x.paidAmount||0))>0?'pill yellow':'pill'}">${money(Math.max(0,Number(x.quantity)*Number(x.unitPrice)-Number(x.paidAmount||0)))}</span>`;
+ if(key==="stockStatus")return Number(x.quantity)<=Number(x.minStock)&&Number(x.minStock)>0?'<span class="pill red">Perlu restok</span>':'<span class="pill">Cukup</span>';
+ if(key==="status")return `<span class="pill ${x.status==="gagal"?"red":x.status==="selesai"?"yellow":""}">${esc(x.status||"aktif")}</span>`;
+ if(key==="quantity")return number(x.quantity);
+ if(key==="unitPrice")return money(x.unitPrice);
+ if(key==="moisture")return x.moisture?number(x.moisture,1):"—";
+ if(key==="laborCount")return x.laborCount?`${number(x.laborCount,0)} orang`:"—";
+ return esc(x[key]||"—");
+}
+function renderTablePage(page){
+ const cfg=configs[page],rows=[...db[page]].sort((a,b)=>((b.date||b.startDate||"").localeCompare(a.date||a.startDate||"")));
+ const filtered=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(activeSearch.toLowerCase()));
+ return `<div class="section-tools"><input class="search" id="tableSearch" placeholder="Cari data..." value="${esc(activeSearch)}"><span class="muted small-text">${filtered.length} dari ${rows.length} data</span>${page==="stocks"?'<button class="btn" onclick="openMoveModal()">⇄ Catat stok masuk/keluar</button>':""}</div>
+ <div class="panel" style="padding:0;overflow:hidden"><div class="table-wrap"><table><thead><tr>${cfg.columns.map(c=>`<th>${c[1]}</th>`).join("")}<th>Aksi</th></tr></thead><tbody>
+ ${filtered.length?filtered.map(x=>`<tr>${cfg.columns.map(c=>`<td>${displayCell(c[0],x)}</td>`).join("")}<td><div class="actions"><button class="btn small" onclick="editRecord('${page}','${x.id}')">Edit</button><button class="btn small danger" onclick="deleteRecord('${page}','${x.id}')">Hapus</button></div></td></tr>`).join(""):`<tr><td colspan="${cfg.columns.length+1}"><div class="empty"><strong>Belum ada ${cfg.singular.toLowerCase()}</strong>Gunakan tombol “Tambah Data” untuk mulai mencatat.</div></td></tr>`}
+ </tbody></table></div></div>
+ ${page==="seasons"?'<div class="report-note">Setiap musim tanam sebaiknya dihubungkan dengan satu bidang lahan. Catatan biaya, aktivitas, panen, dan penjualan kemudian dihubungkan ke musim tanam tersebut.</div>':""}
+ ${page==="expenses"?'<div class="report-note">Total biaya dihitung otomatis dari jumlah × harga satuan. Masukkan setiap pengeluaran satu per satu agar biaya per musim tanam dapat dihitung.</div>':""}
+ ${page==="harvests"?'<div class="report-note">Gunakan satuan kg atau ton secara konsisten. Aplikasi mengonversi keduanya ke kilogram untuk perhitungan total produksi.</div>':""}
+ ${page==="stocks"?renderStockMoves():""}`;
+}
+
+function renderStockMoves(){
+ const moves=[...db.stockMoves].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,12);
+ return `<div class="panel" style="margin-top:15px"><div class="panel-head"><div><h2>Riwayat stok masuk dan keluar</h2><div class="muted small-text">Maksimal 12 transaksi terbaru ditampilkan</div></div></div>
+ ${moves.length?`<div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Barang</th><th>Jenis</th><th>Jumlah</th><th>Keterangan</th></tr></thead><tbody>${moves.map(m=>{const st=db.stocks.find(x=>x.id===m.stockId);return `<tr><td>${dateFmt(m.date)}</td><td>${esc(st?.name||"Barang dihapus")}</td><td><span class="pill ${m.type==="keluar"?"yellow":""}">${m.type==="masuk"?"Stok masuk":"Stok keluar"}</span></td><td>${m.type==="masuk"?"+":"−"}${number(m.quantity)} ${esc(st?.unit||"")}</td><td>${esc(m.note||"—")}</td></tr>`}).join("")}</tbody></table></div>`:`<div class="empty"><strong>Belum ada mutasi stok</strong>Gunakan tombol “Catat stok masuk/keluar” untuk mencatat pergerakan barang.</div>`}</div>`;
+}
+
+function renderReports(){
+ const seasons=db.seasons.map(s=>{
+  const land=db.lands.find(l=>l.id===s.landId);
+  const area=Number(land?.area)||0, cost=costOfSeason(s.id), revenue=revenueOfSeason(s.id), harvest=harvestOfSeason(s.id);
+  return {s,area,cost,revenue,harvest,profit:revenue-cost,productivity:area?harvest/area:0,rc:cost?revenue/cost:0};
+ });
+ const totalP=sum(seasons,x=>x.profit), totalC=sum(seasons,x=>x.cost),totalR=sum(seasons,x=>x.revenue);
+ return `<div class="grid report-cards">
+ ${statCard("Total biaya tercatat",money(totalC),"Seluruh musim tanam","💸")}
+ ${statCard("Total penerimaan",money(totalR),"Nilai penjualan tercatat","🧾")}
+ ${statCard("Selisih penerimaan-biaya",money(totalP),"Belum termasuk biaya yang belum dicatat","📊")}
+ </div>
+ <div class="panel">
+  <div class="panel-head"><div><h2>Analisis per musim tanam</h2><div class="muted small-text">Perhitungan berdasarkan lahan, biaya, panen, dan transaksi penjualan</div></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Komoditas / varietas</th><th>Lahan</th><th>Luas</th><th>Panen</th><th>Produktivitas</th><th>Biaya</th><th>Penerimaan</th><th>Selisih</th><th>R/C</th></tr></thead><tbody>
+  ${seasons.length?seasons.map(x=>`<tr><td>${x.s.crop==="padi"?"Padi":"Jagung"} · ${esc(x.s.variety)}</td><td>${esc(seasonLand(x.s))}</td><td>${number(x.area,2)} ha</td><td>${number(x.harvest/1000,2)} ton</td><td>${x.area?number(x.productivity/1000,2)+" ton/ha":"—"}</td><td>${money(x.cost)}</td><td>${money(x.revenue)}</td><td><b style="color:${x.profit>=0?"#326da8":"#b23c36"}">${money(x.profit)}</b></td><td>${x.cost?number(x.rc,2):"—"}</td></tr>`).join(""):`<tr><td colspan="9"><div class="empty"><strong>Belum ada data musim tanam</strong>Tambahkan lahan dan musim tanam terlebih dahulu.</div></td></tr>`}
+  </tbody></table></div>
+  <div class="report-note"><b>Cara membaca:</b> Produktivitas = total panen (kg) ÷ luas lahan (ha). Selisih = nilai penjualan − biaya tercatat. R/C = penerimaan ÷ biaya. R/C di atas 1 menunjukkan penerimaan lebih besar daripada biaya yang tercatat, bukan jaminan seluruh biaya ekonomi telah diperhitungkan.</div>
+ </div>
+ <div class="panel" style="margin-top:15px">
+  <div class="panel-head"><div><h2>Ringkasan komoditas</h2><div class="muted small-text">Perbandingan akumulasi data padi dan jagung</div></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Komoditas</th><th>Musim tanam</th><th>Total panen</th><th>Total biaya</th><th>Total penjualan</th><th>Selisih</th></tr></thead><tbody>
+  ${["padi","jagung"].map(c=>{const ss=seasons.filter(x=>x.s.crop===c);const ids=ss.map(x=>x.s.id);const co=sum(ss,x=>x.cost),re=sum(ss,x=>x.revenue),ha=sum(ss,x=>x.harvest);return `<tr><td><b>${c==="padi"?"Padi":"Jagung"}</b></td><td>${ss.length}</td><td>${number(ha/1000,2)} ton</td><td>${money(co)}</td><td>${money(re)}</td><td>${money(re-co)}</td></tr>`}).join("")}
+  </tbody></table></div>
+ </div>`;
+}
+function renderBackup(){
+ return `<div class="notice"><b>Penting:</b> Versi ini menyimpan data secara lokal pada browser dan perangkat yang digunakan. Data tidak otomatis tersinkron ke perangkat lain atau ke cloud. Ekspor file cadangan secara berkala.</div>
+ <div class="grid settings-grid">
+  <div class="setting-card"><h3>Unduh cadangan lengkap</h3><p>Simpan seluruh data lahan, musim tanam, aktivitas, biaya, persediaan, panen, dan penjualan ke file JSON.</p><button class="btn primary" onclick="backupData()">⇩ Unduh Backup JSON</button></div>
+  <div class="setting-card"><h3>Pulihkan data</h3><p>Impor file backup JSON CatatanPetani yang sebelumnya dibuat dari aplikasi ini. Data saat ini akan digantikan.</p><input type="file" id="restoreFile" accept=".json,application/json"><button class="btn" style="margin-top:10px" onclick="restoreData()">↑ Pulihkan Backup</button></div>
+  <div class="setting-card"><h3>Ekspor tabel CSV</h3><p>Unduh data per menu untuk dibuka dan diolah lebih lanjut menggunakan Microsoft Excel atau aplikasi spreadsheet.</p><select id="csvSelect"><option value="lands">Data lahan</option><option value="seasons">Musim tanam</option><option value="activities">Aktivitas budidaya</option><option value="expenses">Biaya produksi</option><option value="stocks">Persediaan</option><option value="harvests">Hasil panen</option><option value="sales">Penjualan</option></select><button class="btn" style="margin-top:10px" onclick="exportCsv(document.getElementById('csvSelect').value)">⇩ Ekspor CSV</button></div>
+  <div class="setting-card"><h3>Informasi aplikasi</h3><p><b>CatatanPetani v1.0</b><br>Aplikasi pencatatan usaha tani padi dan jagung. Dirancang untuk pencatatan operasional dasar dan evaluasi usaha tani.</p><span class="pill">Penyimpanan lokal</span> <span class="pill">Dapat digunakan offline</span></div>
+  <div class="setting-card"><h3>Hapus seluruh data</h3><p>Gunakan hanya jika ingin mengosongkan aplikasi. Tindakan ini tidak dapat dibatalkan tanpa file backup.</p><button class="btn danger" onclick="clearAll()">Hapus semua data</button></div>
+ </div>`;
+}
+function optionsFor(field){
+ if(field.source==="lands")return db.lands.map(x=>({value:x.id,label:`${x.name} · ${x.location||""}`}));
+ if(field.source==="seasons")return db.seasons.map(x=>({value:x.id,label:`${x.crop==="padi"?"Padi":"Jagung"} · ${x.variety} · ${landName(x.landId)}`}));
+ return (field.options||[]).map(x=>typeof x==="string"?({value:x,label:x}):x);
+}
+function renderField(f,value){
+ const val=value??"";
+ let control="";
+ if(f.type==="select"){
+  const opts=optionsFor(f);
+  control=`<select name="${f.name}" ${f.required?"required":""}><option value="">Pilih ${f.label.toLowerCase()}</option>${opts.map(o=>`<option value="${esc(o.value)}" ${String(val)===String(o.value)?"selected":""}>${esc(o.label)}</option>`).join("")}</select>`;
+ }else if(f.type==="textarea"){
+  control=`<textarea name="${f.name}" ${f.required?"required":""} placeholder="${esc(f.placeholder||"")}">${esc(val)}</textarea>`;
+ }else{
+  const type=f.type||"text";
+  const step=f.step?`step="${f.step}"`:type==="number"?'step="any"':"";
+  control=`<input name="${f.name}" type="${type}" ${step} ${f.required?"required":""} ${type==="number"?'min="0"':""} value="${esc(val)}" placeholder="${esc(f.placeholder||"")}">`;
+ }
+ return `<div class="field ${f.full?"full":""}"><label>${f.label}${f.required?' <span style="color:#c2413b">*</span>':""}</label>${control}${f.hint?`<div class="hint">${f.hint}</div>`:""}</div>`;
+}
+function openModal(page,idToEdit=null){
+ const cfg=configs[page]; if(!cfg)return;
+ editingId=idToEdit;
+ const record=idToEdit?db[page].find(x=>x.id===idToEdit):{};
+ document.getElementById("modalTitle").textContent=(idToEdit?"Edit ":"Tambah ")+cfg.singular;
+ document.getElementById("formFields").innerHTML=cfg.fields.map(f=>{
+  let v=record?.[f.name];
+  if(!idToEdit&&f.type==="date"&&["date","startDate"].includes(f.name))v=new Date().toISOString().slice(0,10);
+  if(!idToEdit&&f.name==="status")v="aktif";
+  if(!idToEdit&&f.name==="paidAmount")v=0;
+  return renderField(f,v);
+ }).join("");
+ document.getElementById("recordForm").dataset.page=page;
+ document.getElementById("modalBackdrop").classList.add("show");
+}
+function closeModal(){document.getElementById("modalBackdrop").classList.remove("show");editingId=null;}
+function editRecord(page,id){openModal(page,id);}
+function deleteRecord(page,id){
+ if(!confirm("Hapus data ini?"))return;
+ db[page]=db[page].filter(x=>x.id!==id);
+ if(page==="lands"){const removed=db.seasons.filter(s=>s.landId===id).map(s=>s.id);db.seasons=db.seasons.filter(s=>s.landId!==id);for(const k of ["activities","expenses","harvests","sales"])db[k]=db[k].filter(x=>!removed.includes(x.seasonId));}
+ if(page==="seasons"){for(const k of ["activities","expenses","harvests","sales"])db[k]=db[k].filter(x=>x.seasonId!==id);}
+ saveData();render();toast("Data berhasil dihapus.");
+}
+document.getElementById("recordForm").addEventListener("submit",e=>{
+ if(e.currentTarget.dataset.page==="stockMove")return;
+ e.preventDefault();
+ const page=e.currentTarget.dataset.page; if(page==="stockMove") return; const cfg=configs[page],fd=new FormData(e.currentTarget),record={};
+ cfg.fields.forEach(f=>{
+  let v=fd.get(f.name);
+  if(v!==null&&f.type==="number")v=v===""?0:Number(v);
+  record[f.name]=v??"";
+ });
+ if(page==="sales"&&Number(record.paidAmount)>Number(record.quantity)*Number(record.unitPrice)){toast("Jumlah pembayaran melebihi nilai penjualan.");return;}
+ if(editingId){const i=db[page].findIndex(x=>x.id===editingId);db[page][i]={...db[page][i],...record};}
+ else db[page].push({id:id(),createdAt:new Date().toISOString(),...record});
+ saveData();closeModal();render();toast("Data berhasil disimpan.");
+});
+function openMoveModal(){
+ if(!db.stocks.length){toast("Tambahkan barang persediaan terlebih dahulu.");return;}
+ const fields=document.getElementById("formFields");
+ document.getElementById("modalTitle").textContent="Catat Stok Masuk / Keluar";
+ fields.innerHTML=`
+ <div class="field full"><label>Barang</label><select name="stockId" required>${db.stocks.map(s=>`<option value="${s.id}">${esc(s.name)} · stok ${number(s.quantity)} ${esc(s.unit)}</option>`).join("")}</select></div>
+ <div class="field"><label>Jenis transaksi</label><select name="type"><option value="masuk">Stok masuk</option><option value="keluar">Stok keluar</option></select></div>
+ <div class="field"><label>Tanggal</label><input name="date" type="date" required value="${new Date().toISOString().slice(0,10)}"></div>
+ <div class="field"><label>Jumlah</label><input name="quantity" type="number" min="0.01" step="any" required></div>
+ <div class="field"><label>Keterangan</label><input name="note" placeholder="Pembelian, pemakaian, retur, dll."></div>`;
+ document.getElementById("recordForm").dataset.page="stockMove";
+ editingId=null;document.getElementById("modalBackdrop").classList.add("show");
+}
+document.getElementById("recordForm").addEventListener("submit",e=>{
+ if(e.currentTarget.dataset.page!=="stockMove")return;
+ e.preventDefault();
+ const f=new FormData(e.currentTarget),stock=db.stocks.find(s=>s.id===f.get("stockId")),q=Number(f.get("quantity")),type=f.get("type");
+ if(!stock||q<=0)return;
+ if(type==="keluar"&&q>Number(stock.quantity)){toast("Stok tidak mencukupi.");return;}
+ stock.quantity=Number(stock.quantity)+(type==="masuk"?q:-q);
+ db.stockMoves.push({id:id(),stockId:stock.id,type,quantity:q,date:f.get("date"),note:f.get("note")});
+ saveData();closeModal();render();toast("Mutasi stok berhasil dicatat.");
+},true);
+
+function exportCsv(page){
+ const rows=db[page]||[];
+ const cfg=configs[page];
+ if(!rows.length){toast("Belum ada data untuk diekspor.");return;}
+ const keys=cfg.fields.map(f=>f.name);
+ const headers=cfg.fields.map(f=>f.label);
+ if(page==="expenses"||page==="sales"){keys.push("amount");headers.push("Total");}
+ const csv=[headers,...rows.map(r=>keys.map(k=>{
+  let v=r[k]??"";
+  if(k==="amount")v=Number(r.quantity)*Number(r.unitPrice);
+  if(k==="landId")v=landName(v);
+  if(k==="seasonId")v=seasonName(v);
+  return String(v).replace(/"/g,'""');
+ }))].map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+ download("\ufeff"+csv,`catatanpetani_${page}_${new Date().toISOString().slice(0,10)}.csv`,"text/csv;charset=utf-8;");
+}
+function download(content,name,type){
+ const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+function backupData(){
+ download(JSON.stringify({app:"CatatanPetani",version:1,exportedAt:new Date().toISOString(),data:db},null,2),`backup_catatanpetani_${new Date().toISOString().slice(0,10)}.json`,"application/json");
+ toast("File backup dibuat.");
+}
+function restoreData(){
+ const file=document.getElementById("restoreFile").files[0];if(!file){toast("Pilih file backup JSON terlebih dahulu.");return;}
+ const reader=new FileReader();
+ reader.onload=()=>{
+  try{const obj=JSON.parse(reader.result),incoming=obj.data||obj;
+   if(!incoming.lands||!incoming.seasons)throw new Error("Format tidak sesuai");
+   if(!confirm("Pulihkan backup? Seluruh data saat ini akan digantikan."))return;
+   db={...emptyState,...incoming};saveData();render();toast("Backup berhasil dipulihkan.");
+  }catch(e){toast("File backup tidak valid.");}
+ };
+ reader.readAsText(file);
+}
+function clearAll(){
+ if(!confirm("Yakin menghapus SELURUH data? Unduh backup terlebih dahulu jika masih diperlukan."))return;
+ db={...emptyState};saveData();render();toast("Seluruh data telah dikosongkan.");
+}
+document.getElementById("nav").addEventListener("click",e=>{const b=e.target.closest("[data-page]");if(b)setPage(b.dataset.page);});
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>setPage(b.dataset.page)));
+document.getElementById("addBtn").addEventListener("click",()=>openModal(currentPage));
+document.getElementById("exportBtn").addEventListener("click",()=>currentPage==="reports"?exportReports():exportCsv(currentPage));
+function exportReports(){
+ const lines=[["Komoditas","Varietas","Lahan","Luas ha","Panen kg","Produktivitas kg/ha","Biaya Rp","Penerimaan Rp","Selisih Rp","R/C"]];
+ db.seasons.forEach(s=>{const l=db.lands.find(x=>x.id===s.landId),area=Number(l?.area)||0,c=costOfSeason(s.id),r=revenueOfSeason(s.id),h=harvestOfSeason(s.id);lines.push([s.crop,s.variety,landName(s.landId),area,h,area?h/area:0,c,r,r-c,c?r/c:0]);});
+ const csv=lines.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(";")).join("\r\n");
+ download("\ufeff"+csv,`laporan_catatanpetani_${new Date().toISOString().slice(0,10)}.csv`,"text/csv;charset=utf-8;");
+}
+document.getElementById("content").addEventListener("input",e=>{if(e.target.id==="tableSearch"){activeSearch=e.target.value;const pos=e.target.selectionStart;render();const n=document.getElementById("tableSearch");n.focus();n.setSelectionRange(pos,pos);}});
+document.getElementById("closeModal").addEventListener("click",closeModal);
+document.getElementById("cancelModal").addEventListener("click",closeModal);
+document.getElementById("modalBackdrop").addEventListener("click",e=>{if(e.target.id==="modalBackdrop")closeModal();});
+document.getElementById("menuBtn").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
+render();
+</script>
+<script>
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("Service worker gagal didaftarkan:", err));
+  });
+}
+</script>
+</body>
+</html>
