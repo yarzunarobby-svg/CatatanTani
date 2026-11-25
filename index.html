@@ -180,6 +180,10 @@ tbody tr:hover{background:#f9fbfe}
 const STORE_KEY = "catatanpetani_data_v1";
 const emptyState = {lands:[],seasons:[],activities:[],expenses:[],stocks:[],stockMoves:[],harvests:[],sales:[]};
 let db = loadData();
+const SHEETS_CONFIG_KEY = "catatanpetani_google_sheets_config_v1";
+let sheetsConfig = loadSheetsConfig();
+let sheetsSyncTimer = null;
+let sheetsSyncBusy = false;
 let currentPage = "dashboard";
 let editingId = null;
 let activeSearch = "";
@@ -188,7 +192,91 @@ function loadData(){
   try { return {...emptyState,...JSON.parse(localStorage.getItem(STORE_KEY) || "{}")}; }
   catch(e){ return {...emptyState}; }
 }
-function saveData(){ localStorage.setItem(STORE_KEY,JSON.stringify(db)); }
+function loadSheetsConfig(){
+  try { return {...{url:"",key:"",initialized:false},...JSON.parse(localStorage.getItem(SHEETS_CONFIG_KEY)||"{}")}; }
+  catch(e){ return {url:"",key:"",initialized:false}; }
+}
+function persistSheetsConfig(){ localStorage.setItem(SHEETS_CONFIG_KEY,JSON.stringify(sheetsConfig)); }
+function saveData(skipCloud=false){
+  localStorage.setItem(STORE_KEY,JSON.stringify(db));
+  if(!skipCloud && sheetsConfig.url && sheetsConfig.key && sheetsConfig.initialized) scheduleSheetsSync();
+}
+function scheduleSheetsSync(){
+  clearTimeout(sheetsSyncTimer);
+  sheetsSyncTimer=setTimeout(()=>pushToSheets(true),1200);
+}
+function sheetsReady(){
+  return /^https:\/\/script\.google\.com\/macros\/s\//.test(sheetsConfig.url||"") && !!sheetsConfig.key;
+}
+function saveGoogleSheetsSettings(){
+  const url=(document.getElementById("gsUrl")?.value||"").trim();
+  const key=(document.getElementById("gsKey")?.value||"").trim();
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec(?:\?.*)?$/.test(url)){
+    toast("URL harus berupa URL Web App Google Apps Script yang berakhiran /exec."); return;
+  }
+  if(key.length<16){toast("Kunci akses minimal 16 karakter.");return;}
+  const changed=url!==sheetsConfig.url || key!==sheetsConfig.key;
+  sheetsConfig={url,key,initialized:changed?false:sheetsConfig.initialized};
+  persistSheetsConfig();
+  toast("Pengaturan Google Sheets tersimpan. Pilih kirim atau ambil data untuk sinkronisasi pertama.");
+  render();
+}
+function readSheetsJsonp(){
+  return new Promise((resolve,reject)=>{
+    if(!sheetsReady()){reject(new Error("Koneksi Google Sheets belum diatur."));return;}
+    const callback="catatanPetaniCallback_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+    const script=document.createElement("script");
+    const cleanup=()=>{delete window[callback];script.remove();};
+    const timer=setTimeout(()=>{cleanup();reject(new Error("Google Sheets tidak merespons. Periksa URL, deployment, dan koneksi internet."));},20000);
+    window[callback]=(result)=>{clearTimeout(timer);cleanup();resolve(result);};
+    script.onerror=()=>{clearTimeout(timer);cleanup();reject(new Error("Gagal membaca Google Sheets. Periksa izin Web App dan kunci akses."));};
+    script.src=sheetsConfig.url+"?action=read&key="+encodeURIComponent(sheetsConfig.key)+"&callback="+callback+"&t="+Date.now();
+    document.body.appendChild(script);
+  });
+}
+async function pushToSheets(silent=false){
+  if(!sheetsReady()){if(!silent)toast("Simpan URL dan kunci akses Google Sheets terlebih dahulu.");return;}
+  if(sheetsSyncBusy)return;
+  sheetsSyncBusy=true;
+  const syncId="sync_"+Date.now()+"_"+Math.floor(Math.random()*100000);
+  try{
+    await fetch(sheetsConfig.url,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"write",key:sheetsConfig.key,syncId,data:db})});
+    await new Promise(r=>setTimeout(r,1800));
+    const result=await readSheetsJsonp();
+    if(!result || !result.ok) throw new Error(result?.error||"Google Sheets menolak permintaan.");
+    if(result.syncId!==syncId) throw new Error("Konfirmasi sinkronisasi belum cocok. Coba ulangi beberapa saat lagi.");
+    sheetsConfig.initialized=true;persistSheetsConfig();
+    if(!silent)toast("Data berhasil dikirim ke Google Sheets.");
+    if(currentPage==="backup")render();
+  }catch(err){
+    console.error(err);
+    if(!silent)toast(err.message||"Sinkronisasi gagal.");
+  }finally{sheetsSyncBusy=false;}
+}
+async function pullFromSheets(silent=false){
+  if(!sheetsReady()){if(!silent)toast("Simpan URL dan kunci akses Google Sheets terlebih dahulu.");return;}
+  if(sheetsSyncBusy)return;
+  sheetsSyncBusy=true;
+  try{
+    const result=await readSheetsJsonp();
+    if(!result || !result.ok) throw new Error(result?.error||"Gagal mengambil data dari Google Sheets.");
+    const incoming=result.data||{};
+    const required=["lands","seasons","activities","expenses","stocks","stockMoves","harvests","sales"];
+    if(!required.every(k=>Array.isArray(incoming[k]))) throw new Error("Struktur database Google Sheets belum lengkap. Jalankan setupDatabase() di Apps Script.");
+    db={...emptyState,...incoming};
+    localStorage.setItem(STORE_KEY,JSON.stringify(db));
+    sheetsConfig.initialized=true;persistSheetsConfig();
+    render();
+    if(!silent)toast("Data Google Sheets berhasil dimuat ke aplikasi.");
+  }catch(err){
+    console.error(err);
+    if(!silent)toast(err.message||"Gagal mengambil data.");
+  }finally{sheetsSyncBusy=false;}
+}
+function disconnectGoogleSheets(){
+  if(!confirm("Putuskan koneksi Google Sheets pada perangkat ini? Data di Google Sheets tidak akan dihapus."))return;
+  sheetsConfig={url:"",key:"",initialized:false};persistSheetsConfig();render();toast("Koneksi pada perangkat ini diputus.");
+}
 function id(){ return "r"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function money(n){ return new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0); }
 function number(n,d=2){ return new Intl.NumberFormat("id-ID",{maximumFractionDigits:d}).format(Number(n)||0); }
@@ -402,7 +490,22 @@ function renderReports(){
  </div>`;
 }
 function renderBackup(){
- return `<div class="notice"><b>Penting:</b> Versi ini menyimpan data secara lokal pada browser dan perangkat yang digunakan. Data tidak otomatis tersinkron ke perangkat lain atau ke cloud. Ekspor file cadangan secara berkala.</div>
+ return `<div class="notice"><b>Penting:</b> Data tersimpan di browser dan dapat disinkronkan ke Google Sheets setelah koneksi dikonfigurasi. Ekspor file cadangan secara berkala sebagai perlindungan tambahan.</div>
+ <div class="panel" style="margin-bottom:15px">
+  <div class="panel-head"><div><h2>☁ Database Google Sheets</h2><div class="muted small-text">Hubungkan aplikasi ke spreadsheet agar data dapat dibuka dari perangkat lain.</div></div><span class="pill ${sheetsConfig.initialized?"":"yellow"}">${sheetsConfig.initialized?"Terhubung":"Belum disinkronkan"}</span></div>
+  <div class="notice">Buat Google Spreadsheet dan deploy Google Apps Script terlebih dahulu. URL Web App dan kunci akses diperoleh dari proses tersebut. Jangan bagikan kunci akses kepada orang lain.</div>
+  <div class="form-grid">
+   <div class="field full"><label>URL Web App Google Apps Script</label><input id="gsUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(sheetsConfig.url)}"></div>
+   <div class="field full"><label>Kunci akses (API key)</label><input id="gsKey" type="password" autocomplete="off" placeholder="Masukkan kunci yang sama dengan API_KEY di Apps Script" value="${esc(sheetsConfig.key)}"></div>
+  </div>
+  <div class="section-tools" style="margin:13px 0 0">
+   <button class="btn primary" onclick="saveGoogleSheetsSettings()">Simpan koneksi</button>
+   <button class="btn" onclick="pushToSheets()">↑ Kirim data perangkat ke Sheets</button>
+   <button class="btn" onclick="pullFromSheets()">↓ Ambil data dari Sheets</button>
+   <button class="btn danger small" onclick="disconnectGoogleSheets()">Putuskan</button>
+  </div>
+  <div class="muted small-text" style="margin-top:10px">Status: ${sheetsConfig.initialized?"Sinkronisasi awal selesai. Perubahan data akan dikirim otomatis setelah disimpan.":"Belum ada sinkronisasi awal. Pilih salah satu tombol kirim atau ambil data."}</div>
+ </div>
  <div class="grid settings-grid">
   <div class="setting-card"><h3>Unduh cadangan lengkap</h3><p>Simpan seluruh data lahan, musim tanam, aktivitas, biaya, persediaan, panen, dan penjualan ke file JSON.</p><button class="btn primary" onclick="backupData()">⇩ Unduh Backup JSON</button></div>
   <div class="setting-card"><h3>Pulihkan data</h3><p>Impor file backup JSON CatatanPetani yang sebelumnya dibuat dari aplikasi ini. Data saat ini akan digantikan.</p><input type="file" id="restoreFile" accept=".json,application/json"><button class="btn" style="margin-top:10px" onclick="restoreData()">↑ Pulihkan Backup</button></div>
@@ -549,6 +652,9 @@ document.getElementById("cancelModal").addEventListener("click",closeModal);
 document.getElementById("modalBackdrop").addEventListener("click",e=>{if(e.target.id==="modalBackdrop")closeModal();});
 document.getElementById("menuBtn").addEventListener("click",()=>document.getElementById("sidebar").classList.toggle("open"));
 render();
+if(sheetsConfig.initialized && sheetsReady()){
+  setTimeout(()=>pullFromSheets(true),900);
+}
 </script>
 <script>
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {

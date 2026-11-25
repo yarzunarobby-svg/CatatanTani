@@ -30,3 +30,7 @@ PWA dan service worker memerlukan HTTPS. GitHub Pages menyediakan HTTPS setelah 
 - `manifest.webmanifest`: konfigurasi PWA.
 - `sw.js`: service worker untuk cache/offline shell.
 - `icons/`: ikon aplikasi.
+
+
+## Database Google Sheets
+Lihat `PANDUAN_GOOGLE_SHEETS.md` dan `Google_Apps_Script_Code.gs` untuk menghubungkan aplikasi ke Google Sheets.
